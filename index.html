@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scodify retro</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Tahoma&display=swap');
+
+        body {
+            font-family: 'Tahoma', sans-serif;
+            background-color: #ECE9D8;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .window {
+            background-color: #FFFFFF;
+            border: 1px solid #0054E3;
+            border-radius: 8px;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 40px);
+        }
+
+        .title-bar {
+            background: linear-gradient(to bottom, #0058E6, #3A93FF);
+            color: white;
+            padding: 5px 10px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+        }
+
+        .title-bar-text {
+            flex-grow: 1;
+        }
+
+        .title-bar-controls {
+            display: flex;
+        }
+
+        .title-bar-controls button {
+            width: 20px;
+            height: 20px;
+            margin-left: 5px;
+            border: 1px solid white;
+            background-color: #0054E3;
+            color: white;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        #searchContainer {
+            display: flex;
+            padding: 10px;
+            background-color: #F0F0F0;
+            border-bottom: 1px solid #D4D0C8;
+        }
+
+        #searchPrompt {
+            background-color: #F0F0F0;
+            color: #000000;
+            border: none;
+            padding: 5px;
+            font-family: 'Tahoma', sans-serif;
+            font-size: 14px;
+        }
+
+        #searchInput {
+            flex-grow: 1;
+            background-color: #FFFFFF;
+            color: #000000;
+            border: 1px solid #7F9DB9;
+            padding: 5px;
+            font-family: 'Tahoma', sans-serif;
+            font-size: 14px;
+            outline: none;
+        }
+
+        #searchButton {
+            background-color: #ECE9D8;
+            color: #000000;
+            border: 1px solid #7F9DB9;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-family: 'Tahoma', sans-serif;
+            font-size: 14px;
+            margin-left: 10px;
+        }
+
+        #resultsContainer {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        #songList {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        #songList li {
+            cursor: pointer;
+            padding: 5px 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        #songList li:hover {
+            background-color: #316AC5;
+            color: white;
+        }
+
+        #loadMoreBtn {
+            background-color: #ECE9D8;
+            color: #000000;
+            border: 1px solid #7F9DB9;
+            padding: 5px 10px;
+            cursor: pointer;
+            margin-top: 10px;
+            display: none;
+            font-family: 'Tahoma', sans-serif;
+            font-size: 14px;
+        }
+
+        #player {
+            background-color: #D4D0C8;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            height: 60px;
+            border-top: 1px solid #7F9DB9;
+        }
+
+        #playPauseBtn, #prevBtn, #nextBtn {
+            background-color: #ECE9D8;
+            color: #000000;
+            border: 1px solid #7F9DB9;
+            padding: 5px 10px;
+            cursor: pointer;
+            margin-right: 10px;
+            font-family: 'Tahoma', sans-serif;
+            font-size: 14px;
+        }
+
+        #progressBar {
+            flex-grow: 1;
+            height: 10px;
+            background-color: #FFFFFF;
+            border: 1px solid #7F9DB9;
+            cursor: pointer;
+        }
+
+        #progress {
+            width: 0;
+            height: 100%;
+            background-color: #316AC5;
+        }
+
+        .lofi-toggle {
+            width: 40px;
+            height: 20px;
+            background-color: #FFFFFF;
+            border: 1px solid #7F9DB9;
+            border-radius: 10px;
+            position: relative;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+
+        .lofi-toggle-knob {
+            width: 18px;
+            height: 18px;
+            background-color: #316AC5;
+            border-radius: 50%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            transition: 0.3s;
+        }
+
+        .lofi-toggle.active {
+            background-color: #316AC5;
+        }
+
+        .lofi-toggle.active .lofi-toggle-knob {
+            background-color: #FFFFFF;
+            transform: translateX(20px);
+        }
+
+        #nowPlaying {
+            position: absolute;
+            bottom: 80px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 14px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            background-color: #D4D0C8;
+            padding: 5px;
+            border-top: 1px solid #7F9DB9;
+        }
+
+        #bitrateSelector {
+            background-color: #FFFFFF;
+            color: #000000;
+            border: 1px solid #7F9DB9;
+            padding: 5px;
+            font-family: 'Tahoma', sans-serif;
+            font-size: 14px;
+            margin-left: 10px;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .window {
+                height: calc(100vh - 20px);
+            }
+
+            #searchContainer {
+                flex-direction: column;
+            }
+
+            #searchInput {
+                margin-bottom: 10px;
+            }
+
+            #searchButton {
+                margin-left: 0;
+            }
+
+            #player {
+                flex-wrap: wrap;
+                height: auto;
+                padding: 5px;
+            }
+
+            #progressBar {
+                width: 100%;
+                margin: 10px 0;
+            }
+
+            #nowPlaying {
+                position: static;
+                margin-top: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="window">
+        <div class="title-bar">
+            <div class="title-bar-text">Scodify retro</div>
+            <div class="title-bar-controls">
+                <button aria-label="Minimize">-</button>
+                <button aria-label="Maximize">□</button>
+                <button aria-label="Close">×</button>
+            </div>
+        </div>
+        <div id="searchContainer">
+            <span id="searchPrompt">Search:</span>
+            <input type="text" id="searchInput" placeholder="Enter song or artist name...">
+            <button id="searchButton">Search</button>
+        </div>
+        <div id="resultsContainer">
+            <ul id="songList"></ul>
+            <button id="loadMoreBtn">Load More</button>
+        </div>
+        <div id="nowPlaying"></div>
+        <div id="player">
+            <button id="prevBtn">Prev</button>
+            <button id="playPauseBtn">Play</button>
+            <button id="nextBtn">Next</button>
+            <div id="progressBar">
+                <div id="progress"></div>
+            </div>
+            <select id="bitrateSelector">
+                <option value="4">320 kbps</option>
+                <option value="3">160 kbps</option>
+            </select>
+            <div class="lofi-toggle">
+                <div class="lofi-toggle-knob"></div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.3/howler.min.js"></script>
+    <script>
+const searchInput = document.getElementById('searchInput');
+const searchButton = document.getElementById('searchButton');
+const songList = document.getElementById('songList');
+const loadMoreBtn = document.getElementById('loadMoreBtn');
+const playPauseBtn = document.getElementById('playPauseBtn');
+const prevBtn = document.getElementById('prevBtn');
+const nextBtn = document.getElementById('nextBtn');
+const progressBar = document.getElementById('progressBar');
+const progress = document.getElementById('progress');
+const lofiToggle = document.querySelector('.lofi-toggle');
+const nowPlaying = document.getElementById('nowPlaying');
+const bitrateSelector = document.getElementById('bitrateSelector');
+
+// State variables
+let currentSong = null;
+let currentQuery = '';
+let currentPage = 1;
+const pageSize = 40;
+const isMobile = window.innerWidth <= 768;
+let slowedReverbEnabled = false;
+let currentPlaylist = [];
+let currentSongIndex = -1;
+
+// Howl instance
+let sound = null;
+
+// Custom tracks
+const customTracks = [
+    {
+        id: 'custom1',
+        name: 'Daku x fuck em all',
+        primaryArtists: 'Mashup',
+        album: { name: 'S-Cloud special' },
+        year: '2023',
+        duration: 161,
+        image: [
+            { link: 'img/dakuxf.jpeg' },
+            { link: 'img/dakuxf.jpeg' },
+            { link: 'img/dakuxf.jpeg' }
+        ],
+        downloadUrl: [
+            { link: 'song/dakuxf.opus' },
+            { link: 'song/dakuxf.opus' },
+            { link: 'song/dakuxf.opus' },
+            { link: 'song/dakuxf.opus' },
+            { link: 'song/dakuxf.opus' }
+        ]
+    },
+    // Add more custom tracks here...
+];
+
+// Event listeners
+searchInput.addEventListener('keyup', (e) => {
+    if (e.key === 'Enter') {
+        performSearch();
+    }
+});
+searchButton.addEventListener('click', performSearch);
+loadMoreBtn.addEventListener('click', () => {
+    currentPage++;
+    searchSongs(currentQuery, currentPage, true);
+});
+playPauseBtn.addEventListener('click', togglePlayPause);
+prevBtn.addEventListener('click', playPreviousSong);
+nextBtn.addEventListener('click', playNextSong);
+lofiToggle.addEventListener('click', toggleSlowedReverb);
+bitrateSelector.addEventListener('change', () => {
+    if (currentSong) {
+        playSong(currentSong, currentSongIndex);
+    }
+});
+progressBar.addEventListener('click', (e) => {
+    if (sound) {
+        const progressWidth = progressBar.clientWidth;
+        const clickX = e.offsetX;
+        const duration = sound.duration();
+        sound.seek(duration * (clickX / progressWidth));
+    }
+});
+
+// Search functions
+function performSearch() {
+    currentQuery = searchInput.value.trim().toLowerCase();
+    currentPage = 1;
+    searchSongs(currentQuery, currentPage);
+}
+
+function searchSongs(query, page, append = false) {
+    if (handleCustomTracks(query)) return;
+
+    fetch(`https://jiosaavn-api-privatecvc2.vercel.app/search/songs?query=${encodeURIComponent(query)}&page=${page}&limit=${pageSize}`)
+        .then(response => response.json())
+        .then(data => {
+            if (!append) {
+                songList.innerHTML = '';
+                currentPlaylist = [];
+            }
+            displayResults(data.data.results);
+            currentPlaylist = currentPlaylist.concat(data.data.results);
+            loadMoreBtn.style.display = data.data.results.length === pageSize ? 'block' : 'none';
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            songList.innerHTML = `<li>Error: ${error.message}</li>`;
+        });
+}
+
+function handleCustomTracks(query) {
+    if (query.toLowerCase() === 'scloud') {
+        displayResults(customTracks);
+        currentPlaylist = customTracks;
+        loadMoreBtn.style.display = 'none';
+        return true;
+    }
+    return false;
+}
+
+function displayResults(results) {
+    results.forEach((song, index) => {
+        const li = document.createElement('li');
+        const songName = isMobile ? shortenSongName(song.name) : song.name;
+        li.textContent = `${currentPage * pageSize - pageSize + index + 1}. ${songName} - ${song.primaryArtists}`;
+        li.title = `${song.name} - ${song.primaryArtists}`;
+        li.addEventListener('click', () => playSong(song, currentPlaylist.indexOf(song)));
+        songList.appendChild(li);
+    });
+}
+
+// Playback functions
+function playSong(song, index) {
+    currentSong = song;
+    currentSongIndex = index;
+    const bitrate = bitrateSelector.value;
+    
+    if (sound) {
+        sound.unload();
+    }
+
+    sound = new Howl({
+        src: [song.downloadUrl[bitrate].link],
+        html5: true,
+        format: ['mp3', 'opus'],
+        onplay: () => {
+            playPauseBtn.textContent = 'Pause';
+            updateProgressBar();
+        },
+        onend: playNextSong,
+        onloaderror: (id, error) => console.error('Load error:', error),
+        onplayerror: (id, error) => console.error('Play error:', error)
+    });
+
+    sound.play();
+    updateNowPlaying();
+    applySlowedReverbEffect();
+}
+
+function togglePlayPause() {
+    if (sound) {
+        if (sound.playing()) {
+            sound.pause();
+            playPauseBtn.textContent = 'Play';
+        } else {
+            sound.play();
+            playPauseBtn.textContent = 'Pause';
+        }
+    }
+}
+
+function playPreviousSong() {
+    if (currentSongIndex > 0) {
+        playSong(currentPlaylist[currentSongIndex - 1], currentSongIndex - 1);
+    }
+}
+
+function playNextSong() {
+    if (currentSongIndex < currentPlaylist.length - 1) {
+        playSong(currentPlaylist[currentSongIndex + 1], currentSongIndex + 1);
+    }
+}
+
+function updateProgressBar() {
+    if (sound) {
+        requestAnimationFrame(updateProgressBar);
+        const seek = sound.seek() || 0;
+        const progressPercent = (seek / sound.duration()) * 100 || 0;
+        progress.style.width = `${progressPercent}%`;
+    }
+}
+
+// Lofi mode functions
+function toggleSlowedReverb() {
+    slowedReverbEnabled = !slowedReverbEnabled;
+    lofiToggle.classList.toggle('active');
+    applySlowedReverbEffect();
+}
+
+function applySlowedReverbEffect() {
+    if (sound) {
+        if (slowedReverbEnabled) {
+            sound.rate(0.85);  // Slow down to 85% speed
+        } else {
+            sound.rate(1);  // Reset to normal speed
+        }
+    }
+}
+
+// Utility functions
+function shortenSongName(name, maxLength = 20) {
+    if (name.length <= maxLength) return name;
+    return name.substring(0, maxLength - 3) + '...';
+}
+
+function formatTime(time) {
+    const minutes = Math.floor(time / 60);
+    const seconds = Math.floor(time % 60);
+    return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+}
+
+function updateNowPlaying() {
+    if (currentSong) {
+        const songName = isMobile ? shortenSongName(currentSong.name) : currentSong.name;
+        nowPlaying.textContent = `Now Playing: ${songName} - ${currentSong.primaryArtists}`;
+        document.title = `${songName} - ${currentSong.album.name}`;
+        if (document.getElementById("player-image")) {
+            document.getElementById("player-image").src = currentSong.image[2].link;
+        }
+    } else {
+        nowPlaying.textContent = '';
+        document.title = 'Enhanced CLI Music Player';
+        if (document.getElementById("player-image")) {
+            document.getElementById("player-image").src = '/api/placeholder/48/48';
+        }
+    }
+}
+
+function handleMobileLayout() {
+    const searchQueryContainer = document.querySelector('.search-query-container');
+    const headerContainer = document.querySelector('.header-container');
+    if (window.innerWidth <= 768) {
+        if (searchQueryContainer) searchQueryContainer.style.display = 'none';
+        if (headerContainer) headerContainer.style.maxHeight = '160px';
+    } else {
+        if (searchQueryContainer) searchQueryContainer.style.display = 'flex';
+        if (headerContainer) headerContainer.style.maxHeight = 'none';
+    }
+}
+
+// Initialize
+window.addEventListener('load', () => {
+    handleMobileLayout();
+    if (window.location.hash) {
+        searchSongs(decodeURIComponent(window.location.hash.substring(1)), 1);
+    } else {
+        searchSongs('hindi', 1);
+    }
+});
+
+window.addEventListener('resize', handleMobileLayout);
+window.addEventListener('hashchange', () => {
+    searchSongs(decodeURIComponent(window.location.hash.substring(1)), 1);
+});
+
+const searchQueryButtons = document.querySelectorAll('.search-query-button');
+if (searchQueryButtons) {
+    searchQueryButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            searchInput.value = this.textContent;
+            performSearch();
+        });
+    });
+}
+    </script>
+</body>
+</html>
